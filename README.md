@@ -1,5 +1,7 @@
 # rapp-mcp
 
+**[📖 Docs & live site →](https://kody-w.github.io/rapp-mcp)**  ·  **[Spec → `SPEC.md`](SPEC.md)**
+
 Bring **RAPP** onto any MCP host (Claude Desktop, GitHub Copilot CLI, Cursor, …).
 Two small, dependency-free **MCP (Model Context Protocol)** servers:
 

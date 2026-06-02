@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>rapp-mcp · AIs joining the RAPP ecosystem</title>
+<meta name="description" content="rapp-mcp brings RAPP — the Rapid Agent Prototyping Platform — into any MCP host. Two tiny, dependency-free Model Context Protocol servers that turn drop-in agents and a whole local brainstem into tools for Claude Desktop, GitHub Copilot CLI, Cursor, and anything that speaks MCP.">
+<style>
+  :root {
+    --bg:        #07090f;
+    --bg-soft:   #0c1019;
+    --panel:     #11131d;
+    --panel-2:   #161a26;
+    --border:    #232838;
+    --border-2:  #2e3447;
+    --text:      #e8ecf6;
+    --muted:     #9aa3b8;
+    --faint:     #6c768f;
+    --accent:    #6ee7ff;   /* synapse cyan */
+    --accent-2:  #a78bfa;   /* neural violet */
+    --accent-3:  #34d399;   /* axon green */
+    --warn:      #fbbf24;
+    --code-bg:   #0a0d15;
+    --radius:    14px;
+    --radius-sm: 9px;
+    --maxw:      1080px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--text);
+    background:
+      radial-gradient(1100px 600px at 12% -8%, rgba(110,231,255,.10), transparent 60%),
+      radial-gradient(900px 520px at 92% 4%, rgba(167,139,250,.12), transparent 60%),
+      radial-gradient(800px 520px at 50% 105%, rgba(52,211,153,.07), transparent 60%),
+      var(--bg);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  h1,h2,h3 { line-height: 1.18; letter-spacing: -0.02em; }
+  code, pre, kbd { font-family: var(--mono); }
+
+  /* ── layout ── */
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 22px; }
+  section { padding: 64px 0; border-top: 1px solid var(--border); }
+  section:first-of-type { border-top: none; }
+
+  /* ── nav ── */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(12px);
+    background: rgba(7,9,15,.78);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: var(--maxw); margin: 0 auto; padding: 12px 22px;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -0.02em; }
+  .brand .dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--accent), var(--accent-2));
+    box-shadow: 0 0 14px rgba(110,231,255,.7);
+  }
+  .brand b { color: var(--text); }
+  .brand .mono { font-family: var(--mono); color: var(--accent); font-weight: 600; }
+  .nav-links { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; }
+  .nav-links a {
+    color: var(--muted); font-size: 13.5px; padding: 6px 10px; border-radius: 8px;
+    white-space: nowrap;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--panel); text-decoration: none; }
+  .nav-cta {
+    color: var(--bg) !important; background: var(--accent);
+    font-weight: 600; border-radius: 8px; padding: 6px 12px !important;
+  }
+  .nav-cta:hover { background: #8af0ff; text-decoration: none !important; }
+
+  /* ── hero ── */
+  .hero { padding: 76px 0 60px; text-align: left; border-top: none; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 9px;
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .04em;
+    color: var(--accent); background: rgba(110,231,255,.07);
+    border: 1px solid var(--border-2); border-radius: 999px; padding: 5px 13px;
+    margin-bottom: 22px;
+  }
+  .eyebrow .pulse {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent-3);
+    box-shadow: 0 0 0 0 rgba(52,211,153,.6); animation: pulse 2.4s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(52,211,153,.55); }
+    70%  { box-shadow: 0 0 0 9px rgba(52,211,153,0); }
+    100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+  }
+  .hero h1 {
+    font-size: clamp(34px, 6vw, 60px); margin: 0 0 18px; font-weight: 800;
+    background: linear-gradient(100deg, #fff 0%, #cfe9ff 38%, var(--accent) 70%, var(--accent-2) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero .lead { font-size: clamp(17px, 2.4vw, 21px); color: var(--muted); max-width: 720px; margin: 0 0 30px; }
+  .hero .lead b { color: var(--text); font-weight: 600; }
+  .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 30px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 18px; border-radius: 10px; font-weight: 600; font-size: 15px;
+    border: 1px solid var(--border-2); color: var(--text); background: var(--panel);
+    cursor: pointer;
+  }
+  .btn:hover { border-color: var(--accent); text-decoration: none; }
+  .btn.primary {
+    background: linear-gradient(100deg, var(--accent), var(--accent-2));
+    color: #06121a; border: none;
+  }
+  .btn.primary:hover { filter: brightness(1.08); }
+
+  /* ── install band ── */
+  .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .install-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 16px 14px; position: relative;
+  }
+  .install-card .tag {
+    font-family: var(--mono); font-size: 11.5px; color: var(--faint);
+    text-transform: uppercase; letter-spacing: .08em; margin-bottom: 9px; display: block;
+  }
+  .install-card .tag b { color: var(--accent); }
+
+  /* ── code blocks ── */
+  .code {
+    position: relative; background: var(--code-bg); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); margin: 0; overflow: hidden;
+  }
+  .code pre {
+    margin: 0; padding: 15px 16px; overflow-x: auto; font-size: 13px; line-height: 1.65;
+    color: #d6dcec; white-space: pre;
+  }
+  .code .copy {
+    position: absolute; top: 9px; right: 9px;
+    font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+    color: var(--muted); background: var(--panel-2); border: 1px solid var(--border-2);
+    border-radius: 7px; padding: 4px 9px; cursor: pointer; opacity: .85;
+    transition: all .12s ease;
+  }
+  .code .copy:hover { color: var(--text); border-color: var(--accent); opacity: 1; }
+  .code .copy.ok { color: var(--accent-3); border-color: var(--accent-3); }
+  .code.label::before {
+    content: attr(data-label);
+    display: block; font-family: var(--mono); font-size: 11px; letter-spacing: .06em;
+    color: var(--faint); text-transform: uppercase;
+    padding: 9px 16px 0;
+  }
+  /* token coloring */
+  .t-cmd  { color: var(--accent-3); }
+  .t-key  { color: var(--accent); }
+  .t-str  { color: #f2c590; }
+  .t-com  { color: var(--faint); font-style: italic; }
+  .t-kw   { color: var(--accent-2); }
+  .t-fn   { color: #8be9fd; }
+  .t-flag { color: var(--warn); }
+
+  /* ── section headings ── */
+  .sec-head { margin-bottom: 14px; }
+  .sec-head .kicker {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .12em;
+    color: var(--accent); text-transform: uppercase; display: block; margin-bottom: 8px;
+  }
+  .sec-head h2 { font-size: clamp(24px, 4vw, 34px); margin: 0 0 8px; }
+  .sec-head p { color: var(--muted); margin: 0; max-width: 760px; font-size: 16px; }
+
+  /* ── server cards ── */
+  .server-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 24px; }
+  .server {
+    background: linear-gradient(180deg, var(--panel), var(--bg-soft));
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px; position: relative; overflow: hidden;
+  }
+  .server::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  }
+  .server.alt::before { background: linear-gradient(90deg, var(--accent-2), var(--accent-3)); }
+  .server h3 { font-size: 18px; margin: 6px 0 4px; }
+  .server h3 .mono { font-family: var(--mono); color: var(--accent); font-size: 15.5px; }
+  .server.alt h3 .mono { color: var(--accent-2); }
+  .server .sub { color: var(--muted); font-size: 14.5px; margin: 0 0 14px; }
+  .server .run { margin-bottom: 14px; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
+  .pill {
+    font-family: var(--mono); font-size: 11.5px; color: var(--text);
+    background: var(--panel-2); border: 1px solid var(--border-2);
+    border-radius: 999px; padding: 4px 10px;
+  }
+  .pill b { color: var(--accent-3); }
+
+  /* ── host tabs ── */
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 24px 0 14px; }
+  .tab {
+    font-size: 14px; font-weight: 600; color: var(--muted);
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 9px; padding: 8px 15px; cursor: pointer;
+  }
+  .tab[aria-selected="true"] {
+    color: var(--bg); background: var(--accent); border-color: var(--accent);
+  }
+  .tab:hover:not([aria-selected="true"]) { color: var(--text); border-color: var(--border-2); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .tab-hint { color: var(--muted); font-size: 13.5px; margin: 0 0 10px; }
+  .tab-hint code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; color: var(--accent); }
+
+  /* ── tiers ── */
+  .tier-flow { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 26px; }
+  .tier {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; position: relative;
+  }
+  .tier .num {
+    font-family: var(--mono); font-size: 12px; color: var(--bg);
+    background: var(--accent); border-radius: 6px; padding: 2px 8px; font-weight: 700;
+    display: inline-block; margin-bottom: 12px;
+  }
+  .tier:nth-child(3) .num { background: var(--accent-2); }
+  .tier:nth-child(5) .num { background: var(--accent-3); }
+  .tier h3 { font-size: 17px; margin: 0 0 4px; }
+  .tier h3 small { display: block; font-weight: 500; color: var(--faint); font-size: 12.5px; font-family: var(--mono); margin-top: 3px; }
+  .tier p { color: var(--muted); font-size: 14px; margin: 10px 0 0; }
+  .tier .where { font-size: 12.5px; color: var(--accent); font-family: var(--mono); margin-top: 12px; display: block; }
+  .arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--faint); font-size: 26px; font-family: var(--mono);
+  }
+  .promo {
+    margin-top: 26px; background: var(--bg-soft); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent-2); border-radius: var(--radius); padding: 20px 22px;
+  }
+  .promo h4 { margin: 0 0 8px; font-size: 16px; color: var(--text); }
+  .promo p { margin: 0 0 8px; color: var(--muted); font-size: 14.5px; }
+  .promo p:last-child { margin-bottom: 0; }
+  .promo code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; color: var(--accent-3); font-size: 12.5px; }
+
+  /* ── quickstart steps ── */
+  .steps { counter-reset: step; margin-top: 24px; display: grid; gap: 14px; }
+  .step {
+    display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start;
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .step .n {
+    counter-increment: step;
+    width: 30px; height: 30px; flex: none; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #06121a; font-weight: 800; font-size: 14px;
+    display: grid; place-items: center;
+  }
+  .step .n::before { content: counter(step); }
+  .step h4 { margin: 3px 0 8px; font-size: 16px; }
+  .step .body { min-width: 0; }
+  .step p { margin: 0 0 10px; color: var(--muted); font-size: 14.5px; }
+  .step p:last-child { margin-bottom: 0; }
+
+  /* ── security ── */
+  .sec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  .sec-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .sec-card .ic { font-size: 20px; margin-bottom: 10px; display: block; }
+  .sec-card h4 { margin: 0 0 6px; font-size: 15.5px; }
+  .sec-card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  /* ── links ── */
+  .link-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 24px; }
+  .link-card {
+    display: block; background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px;
+  }
+  .link-card:hover { border-color: var(--accent); text-decoration: none; transform: translateY(-2px); transition: all .15s ease; }
+  .link-card .lt { font-weight: 700; color: var(--text); font-size: 15.5px; display: flex; align-items: center; gap: 8px; }
+  .link-card .ld { color: var(--muted); font-size: 13.5px; margin-top: 5px; }
+  .link-card .lm { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-top: 9px; word-break: break-all; }
+
+  /* ── footer ── */
+  footer { border-top: 1px solid var(--border); padding: 34px 0 50px; color: var(--faint); font-size: 13.5px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; align-items: center; }
+  footer a { color: var(--muted); }
+
+  .note { color: var(--faint); font-size: 13px; margin-top: 10px; }
+  .mono-inline { font-family: var(--mono); color: var(--accent); background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; font-size: 13px; }
+
+  /* ── responsive ── */
+  @media (max-width: 860px) {
+    .install-grid, .server-grid, .tier-flow, .sec-grid, .link-grid { grid-template-columns: 1fr; }
+    .arrow { transform: rotate(90deg); padding: 4px 0; }
+    .nav-links { display: none; }
+    .hero { padding: 54px 0 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ───────────────────────── NAV ───────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <span class="brand"><span class="dot"></span><b>rapp-mcp</b></span>
+    <div class="nav-links">
+      <a href="#what">What it is</a>
+      <a href="#servers">Servers</a>
+      <a href="#agent">Write an agent</a>
+      <a href="#tiers">Three tiers</a>
+      <a href="#quickstart">Quickstart</a>
+      <a href="#security">Security</a>
+      <a href="#links">Links</a>
+      <a class="nav-cta" href="https://github.com/kody-w/rapp-mcp" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ───────────────────────── HERO ───────────────────────── -->
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow"><span class="pulse"></span>RAPP · Model Context Protocol layer</span>
+    <h1>AIs joining the<br>RAPP ecosystem</h1>
+    <p class="lead">
+      <b>rapp-mcp</b> brings RAPP — the Rapid Agent Prototyping Platform — into <b>any</b> MCP host.
+      Two tiny, dependency-free Model Context Protocol servers turn a folder of drop-in agents,
+      and a whole local <b>brainstem</b>, into tools your AI can call. Claude Desktop, GitHub Copilot CLI,
+      Cursor — any client that speaks MCP gets the full on-device functionality, and a path all the way
+      up to Azure and Microsoft 365 when you're ready.
+    </p>
+    <div class="hero-cta">
+      <a class="btn primary" href="#quickstart">Get started →</a>
+      <a class="btn" href="#servers">See the two servers</a>
+      <a class="btn" href="https://github.com/kody-w/rapp-mcp" target="_blank" rel="noopener">github.com/kody-w/rapp-mcp ↗</a>
+    </div>
+
+    <div class="install-grid">
+      <div class="install-card">
+        <span class="tag">Agents as tools — <b>rapp_mcp.py</b></span>
+        <div class="code">
+          <button class="copy" type="button">Copy</button>
+<pre><span class="t-cmd">python3</span> rapp_mcp.py <span class="t-str">/path/to/agents</span></pre>
+        </div>
+      </div>
+      <div class="install-card">
+        <span class="tag">The whole brainstem — <b>rapp_brainstem_mcp.py</b></span>
+        <div class="code">
+          <button class="copy" type="button">Copy</button>
+<pre><span class="t-cmd">python3</span> rapp_brainstem_mcp.py</pre>
+        </div>
+      </div>
+    </div>
+    <p class="note">Pure Python standard library. No pip install, no dependencies, no build step.</p>
+  </div>
+</header>
+
+<!-- ───────────────────────── WHAT ───────────────────────── -->
+<section id="what">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">// What it is</span>
+      <h2>One protocol, the whole platform</h2>
+      <p>
+        RAPP's philosophy is <b>"engine, not experience"</b> — infrastructure, not an app. rapp-mcp is the
+        on-ramp: it speaks the Model Context Protocol so any AI client can <i>join</i> the ecosystem and
+        use it. You get two complementary servers, and you pick one or run both.
+      </p>
+    </div>
+
+    <div class="server-grid">
+      <div class="server">
+        <div class="pill-row"><span class="pill"><b>stateless</b></span><span class="pill">hotload</span><span class="pill">stdlib only</span></div>
+        <h3><span class="mono">rapp_mcp.py</span> — agents as tools</h3>
+        <p class="sub">
+          Point it at a folder of <span class="mono-inline">*_agent.py</span> files. Each agent becomes its
+          own MCP tool, with the agent's own JSON-Schema as the tool's input schema. Drop a new file in and
+          it <b>hotloads</b> — the folder is re-scanned on every call, so there's nothing to restart.
+        </p>
+      </div>
+      <div class="server alt">
+        <div class="pill-row"><span class="pill"><b>LLM-routed</b></span><span class="pill">memory</span><span class="pill">self-bootstrapping</span></div>
+        <h3><span class="mono">rapp_brainstem_mcp.py</span> — the brainstem brain</h3>
+        <p class="sub">
+          Bridges a whole running brainstem. The <span class="mono-inline">brainstem</span> tool routes your
+          message through the full <span class="mono-inline">/chat</span> pipeline — LLM, memory, and every
+          local agent at once. It can even <b>install and start</b> the brainstem for you.
+        </p>
+      </div>
+    </div>
+    <p class="note">
+      The bytes are the contract. The same <span class="mono-inline">*_agent.py</span> behaves identically
+      on every machine — local laptop, teammate's box, or a CI runner.
+    </p>
+  </div>
+</section>
+
+<!-- ───────────────────────── SERVERS ───────────────────────── -->
+<section id="servers">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">// The two MCP servers</span>
+      <h2>Register it in your host</h2>
+      <p>
+        Both servers speak MCP over stdio. Add the snippet to your client's config, restart the client, and the
+        tools appear. Use absolute paths to the <span class="mono-inline">.py</span> files (and, for
+        <span class="mono-inline">rapp_mcp.py</span>, your agents folder).
+      </p>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="MCP host">
+      <button class="tab" role="tab" aria-selected="true" data-tab="claude">Claude Desktop</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="copilot">GitHub Copilot CLI</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="cursor">Cursor</button>
+    </div>
+
+    <!-- Claude Desktop -->
+    <div class="tab-panel active" data-panel="claude">
+      <p class="tab-hint">
+        Edit <code>~/Library/Application Support/Claude/claude_desktop_config.json</code> (macOS) or
+        <code>%APPDATA%\Claude\claude_desktop_config.json</code> (Windows), then restart Claude Desktop.
+      </p>
+      <div class="code label" data-label="claude_desktop_config.json">
+        <button class="copy" type="button">Copy</button>
+<pre>{
+  <span class="t-key">"mcpServers"</span>: {
+    <span class="t-key">"rapp-mcp"</span>: {
+      <span class="t-key">"command"</span>: <span class="t-str">"python3"</span>,
+      <span class="t-key">"args"</span>: [<span class="t-str">"/abs/path/rapp-mcp/rapp_mcp.py"</span>, <span class="t-str">"/abs/path/to/agents"</span>]
+    },
+    <span class="t-key">"rapp-brainstem"</span>: {
+      <span class="t-key">"command"</span>: <span class="t-str">"python3"</span>,
+      <span class="t-key">"args"</span>: [<span class="t-str">"/abs/path/rapp-mcp/rapp_brainstem_mcp.py"</span>]
+    }
+  }
+}</pre>
+      </div>
+    </div>
+
+    <!-- GitHub Copilot CLI -->
+    <div class="tab-panel" data-panel="copilot">
+      <p class="tab-hint">
+        Add the servers to your Copilot CLI MCP configuration (e.g. <code>~/.copilot/mcp-config.json</code>),
+        then start a new session. The same <code>mcpServers</code> shape applies.
+      </p>
+      <div class="code label" data-label="mcp-config.json">
+        <button class="copy" type="button">Copy</button>
+<pre>{
+  <span class="t-key">"mcpServers"</span>: {
+    <span class="t-key">"rapp-mcp"</span>: {
+      <span class="t-key">"command"</span>: <span class="t-str">"python3"</span>,
+      <span class="t-key">"args"</span>: [<span class="t-str">"/abs/path/rapp-mcp/rapp_mcp.py"</span>, <span class="t-str">"/abs/path/to/agents"</span>]
+    },
+    <span class="t-key">"rapp-brainstem"</span>: {
+      <span class="t-key">"command"</span>: <span class="t-str">"python3"</span>,
+      <span class="t-key">"args"</span>: [<span class="t-str">"/abs/path/rapp-mcp/rapp_brainstem_mcp.py"</span>]
+    }
+  }
+}</pre>
+      </div>
+    </div>
+
+    <!-- Cursor -->
+    <div class="tab-panel" data-panel="cursor">
+      <p class="tab-hint">
+        Add to <code>~/.cursor/mcp.json</code> (global) or <code>.cursor/mcp.json</code> in your project,
+        then reload. Cursor uses the same <code>mcpServers</code> format.
+      </p>
+      <div class="code label" data-label=".cursor/mcp.json">
+        <button class="copy" type="button">Copy</button>
+<pre>{
+  <span class="t-key">"mcpServers"</span>: {
+    <span class="t-key">"rapp-mcp"</span>: {
+      <span class="t-key">"command"</span>: <span class="t-str">"python3"</span>,
+      <span class="t-key">"args"</span>: [<span class="t-str">"/abs/path/rapp-mcp/rapp_mcp.py"</span>, <span class="t-str">"/abs/path/to/agents"</span>]
+    },
+    <span class="t-key">"rapp-brainstem"</span>: {
+      <span class="t-key">"command"</span>: <span class="t-str">"python3"</span>,
+      <span class="t-key">"args"</span>: [<span class="t-str">"/abs/path/rapp-mcp/rapp_brainstem_mcp.py"</span>]
+    }
+  }
+}</pre>
+      </div>
+    </div>
+
+    <div class="server-grid" style="margin-top:30px">
+      <div class="server">
+        <h3><span class="mono">rapp_mcp.py</span> tools</h3>
+        <p class="sub">One MCP tool per agent in your folder. Names and input schemas come straight from each
+          agent's <span class="mono-inline">metadata</span>.</p>
+        <div class="pill-row"><span class="pill">&lt;agent&gt;</span><span class="pill">&lt;agent&gt;</span><span class="pill">…hotloaded</span></div>
+      </div>
+      <div class="server alt">
+        <h3><span class="mono">rapp_brainstem_mcp.py</span> tools</h3>
+        <p class="sub">Three tools that wrap a whole running brainstem:</p>
+        <div class="pill-row">
+          <span class="pill"><b>brainstem</b> · message, new_session</span>
+        </div>
+        <div class="pill-row">
+          <span class="pill"><b>brainstem_status</b></span>
+          <span class="pill"><b>brainstem_bootstrap</b></span>
+        </div>
+        <p class="sub" style="margin-top:12px">
+          <span class="mono-inline">brainstem</span> sends a plain-English message through the brainstem's
+          <span class="mono-inline">/chat</span>; <span class="mono-inline">new_session</span> (default
+          <span class="mono-inline">false</span>) keeps memory continuity across turns. Set
+          <span class="mono-inline">RAPP_BRAINSTEM_URL</span> to bridge a non-default host (defaults to
+          <span class="mono-inline">http://localhost:7071</span>).
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── WRITE AN AGENT ───────────────────────── -->
+<section id="agent">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">// Write an agent.py</span>
+      <h2>The whole agent contract, on one screen</h2>
+      <p>
+        An agent is a single file matching <span class="mono-inline">*_agent.py</span>. It extends
+        <span class="mono-inline">BasicAgent</span> and defines three things: <b>self.name</b>,
+        <b>self.metadata</b> (a JSON-Schema function definition that becomes the tool's input schema), and
+        <b>perform(**kwargs) → str</b>. Drop it in your agents folder and it's live — no restart.
+      </p>
+    </div>
+
+    <div class="code label" data-label="agents/hello_agent.py">
+      <button class="copy" type="button">Copy</button>
+<pre><span class="t-com"># A minimal rapp-mcp agent. Drop any *_agent.py like this into your agents folder.</span>
+<span class="t-kw">try</span>:
+    <span class="t-kw">from</span> agents.basic_agent <span class="t-kw">import</span> BasicAgent
+<span class="t-kw">except</span> ImportError:
+    <span class="t-kw">from</span> basic_agent <span class="t-kw">import</span> BasicAgent
+
+
+<span class="t-kw">class</span> <span class="t-fn">HelloAgent</span>(BasicAgent):
+    <span class="t-kw">def</span> <span class="t-fn">__init__</span>(self):
+        self.name = <span class="t-str">"hello"</span>
+        self.metadata = {
+            <span class="t-key">"name"</span>: self.name,
+            <span class="t-key">"description"</span>: <span class="t-str">"Say hello to someone."</span>,
+            <span class="t-key">"parameters"</span>: {
+                <span class="t-key">"type"</span>: <span class="t-str">"object"</span>,
+                <span class="t-key">"properties"</span>: {<span class="t-key">"name"</span>: {<span class="t-key">"type"</span>: <span class="t-str">"string"</span>, <span class="t-key">"description"</span>: <span class="t-str">"Who to greet."</span>}},
+                <span class="t-key">"required"</span>: [<span class="t-str">"name"</span>],
+            },
+        }
+        <span class="t-kw">super</span>().__init__(name=self.name, metadata=self.metadata)
+
+    <span class="t-kw">def</span> <span class="t-fn">perform</span>(self, **kwargs):
+        <span class="t-kw">return</span> <span class="t-str">f"Hello, {kwargs.get('name', 'world')}!"</span></pre>
+    </div>
+    <p class="note">
+      Make the <span class="mono-inline">description</span> fields self-sufficient — the calling AI only
+      ever sees your metadata, so the description <i>is</i> the interface. The same file works unchanged in
+      a Tier&nbsp;1 brainstem, a Tier&nbsp;2 Azure Function, and here in any MCP host.
+    </p>
+  </div>
+</section>
+
+<!-- ───────────────────────── TIERS ───────────────────────── -->
+<section id="tiers">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">// The three tiers</span>
+      <h2>Local → Azure → Microsoft 365</h2>
+      <p>
+        RAPP is three self-contained tiers that share one agent contract. You start local and advance only
+        when you choose to. rapp-mcp plugs in at Tier&nbsp;1, and the brainstem itself can automate promotion
+        upward.
+      </p>
+    </div>
+
+    <div class="tier-flow">
+      <div class="tier">
+        <span class="num">T1</span>
+        <h3>Brainstem <small>local · Flask · port 7071</small></h3>
+        <p>
+          A local server whose sacred endpoint is <span class="mono-inline">POST /chat</span>. Its LLM routes
+          each request through your drop-in agents, with memory and on-device context. This is where rapp-mcp
+          connects.
+        </p>
+        <span class="where">$ ./start.sh</span>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="tier">
+        <span class="num">T2</span>
+        <h3>Spinal Cord <small>Azure Functions · Azure OpenAI</small></h3>
+        <p>
+          The <i>same</i> agent contract, running serverless. An ARM template provisions Functions + Azure
+          OpenAI; your agents move up unchanged.
+        </p>
+        <span class="where">$ ./deploy.sh &lt;rg&gt; &lt;loc&gt;</span>
+      </div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="tier">
+        <span class="num">T3</span>
+        <h3>Nervous System <small>Microsoft 365 · Copilot Studio</small></h3>
+        <p>
+          A managed Power Platform solution imported into a Dataverse environment, surfacing the same agents
+          inside Teams for your whole org.
+        </p>
+        <span class="where">import the solution .zip</span>
+      </div>
+    </div>
+
+    <div class="promo">
+      <h4>How the brainstem promotes between tiers</h4>
+      <p>
+        Promotion is just more agents. Because every tier honors the same single-file agent contract, the
+        brainstem can carry deploy agents that drive the next tier <i>for</i> you — provisioning Azure via the
+        ARM template (<code>azuredeploy.json</code> + <code>./deploy.sh</code>) for Tier&nbsp;2, or importing
+        the Copilot Studio solution for Tier&nbsp;3.
+      </p>
+      <p>
+        From an MCP host that's the whole loop: ask the <span class="mono-inline">brainstem</span> tool to
+        promote, it runs the deploy agent locally with your own cloud credentials, and your agents light up at
+        the next tier — no rewrite, no lock-in. You advance when <i>you</i> choose to.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── QUICKSTART ───────────────────────── -->
+<section id="quickstart">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">// Quickstart</span>
+      <h2>Clone, run, register</h2>
+      <p>Three minutes from zero to your AI calling RAPP tools. You need only Python 3 and an MCP host.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="n"></div>
+        <div class="body">
+          <h4>Clone rapp-mcp</h4>
+          <p>Grab the two servers and the example agent.</p>
+          <div class="code">
+            <button class="copy" type="button">Copy</button>
+<pre><span class="t-cmd">git</span> clone https://github.com/kody-w/rapp-mcp
+<span class="t-cmd">cd</span> rapp-mcp</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="n"></div>
+        <div class="body">
+          <h4>Run a server to sanity-check it</h4>
+          <p>Serve the bundled example agents as MCP tools (Ctrl-C to stop). No install needed — it's pure stdlib.</p>
+          <div class="code">
+            <button class="copy" type="button">Copy</button>
+<pre><span class="t-cmd">python3</span> rapp_mcp.py examples</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="n"></div>
+        <div class="body">
+          <h4>Register it in your MCP host</h4>
+          <p>Add the snippet to your client config (see <a href="#servers">The two MCP servers</a>) using
+            absolute paths, then restart the client. Your tools — one per agent, plus the brainstem tools —
+            appear automatically.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="n"></div>
+        <div class="body">
+          <h4>Optional — bring up the brainstem brain</h4>
+          <p>
+            Register <span class="mono-inline">rapp_brainstem_mcp.py</span> too, then just ask your AI to use the
+            <span class="mono-inline">brainstem_bootstrap</span> tool. It installs and starts the brainstem and
+            waits until it's healthy. Or install it yourself with the one-liner:
+          </p>
+          <div class="code">
+            <button class="copy" type="button">Copy</button>
+<pre><span class="t-cmd">curl</span> <span class="t-flag">-fsSL</span> https://microsoft.github.io/aibast-agents-library/install.sh | <span class="t-cmd">bash</span></pre>
+          </div>
+          <p style="margin-top:10px">Then drop your own <span class="mono-inline">*_agent.py</span> files into its
+            <span class="mono-inline">agents/</span> folder — they hotload, and they're instantly callable from
+            your MCP host.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── SECURITY ───────────────────────── -->
+<section id="security">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">// Security</span>
+      <h2>Local-first, your own credentials</h2>
+      <p>rapp-mcp is designed to keep control on your machine. Nothing phones home; the servers are small
+        enough to read top to bottom.</p>
+    </div>
+
+    <div class="sec-grid">
+      <div class="sec-card">
+        <span class="ic">🔒</span>
+        <h4>Runs on your machine</h4>
+        <p>Both servers are local stdio processes spawned by your MCP host. Agent code executes on-device, against
+          local context — not a hosted, shared cloud service.</p>
+      </div>
+      <div class="sec-card">
+        <span class="ic">🔑</span>
+        <h4>Your own creds</h4>
+        <p>The brainstem authenticates with your own GitHub Copilot login; Tier&nbsp;2/3 promotion uses your own
+          Azure and Microsoft 365 credentials. rapp-mcp ships none and stores none.</p>
+      </div>
+      <div class="sec-card">
+        <span class="ic">📦</span>
+        <h4>Zero dependencies</h4>
+        <p>Pure Python standard library — no pip install, no transitive packages, no build step. A smaller surface
+          to audit and to trust.</p>
+      </div>
+      <div class="sec-card">
+        <span class="ic">👁️</span>
+        <h4>Readable by design</h4>
+        <p>Each server is a single short file. The MCP protocol is plain JSON-RPC over stdio — you can watch exactly
+          what crosses the wire.</p>
+      </div>
+      <div class="sec-card">
+        <span class="ic">🧩</span>
+        <h4>You choose what loads</h4>
+        <p>Only files you place in your agents folder become tools. <span class="mono-inline">experimental/</span>
+          and <span class="mono-inline">disabled/</span> subfolders are skipped on purpose.</p>
+      </div>
+      <div class="sec-card">
+        <span class="ic">⚖️</span>
+        <h4>Agents run code</h4>
+        <p>An agent is real Python that runs with your permissions. Treat <span class="mono-inline">*_agent.py</span>
+          files like any script — review before you drop them in, especially from others.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── LINKS ───────────────────────── -->
+<section id="links">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker">// Links</span>
+      <h2>Everything in one place</h2>
+    </div>
+    <div class="link-grid">
+      <a class="link-card" href="https://github.com/kody-w/rapp-mcp" target="_blank" rel="noopener">
+        <span class="lt">Repository ↗</span>
+        <span class="ld">Source for both MCP servers, examples, and docs.</span>
+        <span class="lm">github.com/kody-w/rapp-mcp</span>
+      </a>
+      <a class="link-card" href="https://github.com/kody-w/rapp-mcp/blob/main/SPEC.md" target="_blank" rel="noopener">
+        <span class="lt">SPEC.md ↗</span>
+        <span class="ld">The full specification: agent contract, tools, and protocol.</span>
+        <span class="lm">github.com/kody-w/rapp-mcp/blob/main/SPEC.md</span>
+      </a>
+      <a class="link-card" href="https://github.com/kody-w/rapp-mcp/blob/main/README.md" target="_blank" rel="noopener">
+        <span class="lt">README ↗</span>
+        <span class="ld">Quick reference for both servers and the agent format.</span>
+        <span class="lm">github.com/kody-w/rapp-mcp/blob/main/README.md</span>
+      </a>
+    </div>
+
+    <div class="server" style="margin-top:18px">
+      <h3>Install the brainstem (one-liner)</h3>
+      <p class="sub">Installs and starts the Tier&nbsp;1 brainstem on your machine.</p>
+      <div class="code">
+        <button class="copy" type="button">Copy</button>
+<pre><span class="t-cmd">curl</span> <span class="t-flag">-fsSL</span> https://microsoft.github.io/aibast-agents-library/install.sh | <span class="t-cmd">bash</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── FOOTER ───────────────────────── -->
+<footer>
+  <div class="wrap">
+    <span><span class="brand" style="display:inline-flex"><span class="dot"></span><b>rapp-mcp</b></span> &nbsp;·&nbsp; AIs joining the RAPP ecosystem.</span>
+    <span>MIT licensed &nbsp;·&nbsp; <a href="https://github.com/kody-w/rapp-mcp" target="_blank" rel="noopener">github.com/kody-w/rapp-mcp</a></span>
+  </div>
+</footer>
+
+<!-- ───────────────────────── tiny inline JS (copy + tabs) ───────────────────────── -->
+<script>
+(function () {
+  // Copy buttons — copy the <pre> text next to each button.
+  document.querySelectorAll('.code .copy').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var pre = btn.parentElement.querySelector('pre');
+      if (!pre) return;
+      var text = pre.innerText;
+      var done = function () {
+        var old = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('ok');
+        setTimeout(function () { btn.textContent = old; btn.classList.remove('ok'); }, 1400);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback(text, done); });
+      } else {
+        fallback(text, done);
+      }
+    });
+  });
+  function fallback(text, done) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'absolute';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  // Host tabs.
+  var tabs = document.querySelectorAll('.tab');
+  var panels = document.querySelectorAll('.tab-panel');
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (t) { t.setAttribute('aria-selected', 'false'); });
+      panels.forEach(function (p) { p.classList.remove('active'); });
+      tab.setAttribute('aria-selected', 'true');
+      var key = tab.getAttribute('data-tab');
+      var panel = document.querySelector('.tab-panel[data-panel="' + key + '"]');
+      if (panel) panel.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>

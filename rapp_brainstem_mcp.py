@@ -39,7 +39,7 @@ PROTOCOL = "2024-11-05"
 
 BRAINSTEM_URL = os.environ.get("RAPP_BRAINSTEM_URL", "http://localhost:7071").rstrip("/")
 BRAINSTEM_HOME = os.path.expanduser(os.environ.get("BRAINSTEM_HOME", "~/.brainstem"))
-INSTALL_ONELINER = "curl -sSfL https://raw.githubusercontent.com/kody-w/rapp-installer/main/install.sh | bash"
+INSTALL_ONELINER = "curl -fsSL https://microsoft.github.io/aibast-agents-library/install.sh | bash"
 
 _session = {"id": None}
 
