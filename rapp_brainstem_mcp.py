@@ -34,7 +34,7 @@ import urllib.error
 import urllib.request
 
 SERVER_NAME = "rapp-brainstem"
-SERVER_VERSION = "0.1.0"
+SERVER_VERSION = "1.0.0"  # tracks the stable rapp-mcp-spec/1.0
 PROTOCOL = "2024-11-05"
 
 BRAINSTEM_URL = os.environ.get("RAPP_BRAINSTEM_URL", "http://localhost:7071").rstrip("/")
@@ -73,7 +73,9 @@ def _chat(message, new_session=False):
             d = json.loads(r.read().decode())
     except urllib.error.HTTPError as e:
         detail = e.read().decode()[:300]
-        if e.code == 500 and "auth" in detail.lower():
+        # /chat surfaces auth failures as 500 (unexpected) or 502 (upstream model/exchange);
+        # steer the user to /login regardless of which status the brainstem chose.
+        if e.code in (500, 502) and any(k in detail.lower() for k in ("auth", "login", "sign in")):
             return "Brainstem needs to authenticate. Open its /login (GitHub device code) and retry."
         return f"Brainstem error HTTP {e.code}: {detail}"
     except Exception as e:

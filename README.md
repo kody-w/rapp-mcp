@@ -3,14 +3,16 @@
 **[📖 Docs & live site →](https://kody-w.github.io/rapp-mcp)**  ·  **[Spec → `SPEC.md`](SPEC.md)**
 
 Bring **RAPP** onto any MCP host (Claude Desktop, GitHub Copilot CLI, Cursor, …).
-Two small, dependency-free **MCP (Model Context Protocol)** servers:
+Three small, dependency-free **MCP (Model Context Protocol)** servers — two serve the local
+machine, the third serves a static catalog straight off `raw.githubusercontent.com`:
 
 | Server | What it gives you |
 |---|---|
 | **`rapp_mcp.py`** | Serves a folder of drop-in `*_agent.py` files as individual MCP tools. Lightweight, stateless, no server to run. |
 | **`rapp_brainstem_mcp.py`** | Exposes a *whole running RAPP brainstem* as one tool — its LLM-orchestrated `/chat` (memory, agents, on-device context). Can install + start the brainstem for you. |
+| **`rapp_static_mcp.py`** | Serves a static, CDN-hosted catalog (`rapp-static-mcp/1.0`) — `rapp_mcp.py` generalized from a local folder to a manifest of URLs, verifying each frame's `sha256` before exec (§3). |
 
-Both are pure Python standard library. Pick one or run both.
+All are pure Python standard library. Pick one or run any combination.
 
 ---
 

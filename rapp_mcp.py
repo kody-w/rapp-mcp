@@ -36,7 +36,7 @@ import traceback
 import types
 
 SERVER_NAME = "rapp-mcp"
-SERVER_VERSION = "0.1.0"
+SERVER_VERSION = "1.0.0"  # tracks the stable rapp-mcp-spec/1.0
 PROTOCOL = "2024-11-05"
 
 AGENTS_DIR = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.getcwd()

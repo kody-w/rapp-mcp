@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>rapp-mcp · AIs joining the RAPP ecosystem</title>
-<meta name="description" content="rapp-mcp brings RAPP — the Rapid Agent Prototyping Platform — into any MCP host. Two tiny, dependency-free Model Context Protocol servers that turn drop-in agents and a whole local brainstem into tools for Claude Desktop, GitHub Copilot CLI, Cursor, and anything that speaks MCP.">
+<meta name="description" content="rapp-mcp brings RAPP — the Rapid Agent Prototyping Platform — into any MCP host. Three tiny, dependency-free Model Context Protocol servers: drop-in agents as tools, a whole local brainstem as a tool, and a static CDN-hosted catalog — for Claude Desktop, GitHub Copilot CLI, Cursor, and anything that speaks MCP.">
 <style>
   :root {
     --bg:        #07090f;
@@ -328,14 +328,14 @@
     <h1>AIs joining the<br>RAPP ecosystem</h1>
     <p class="lead">
       <b>rapp-mcp</b> brings RAPP — the Rapid Agent Prototyping Platform — into <b>any</b> MCP host.
-      Two tiny, dependency-free Model Context Protocol servers turn a folder of drop-in agents,
-      and a whole local <b>brainstem</b>, into tools your AI can call. Claude Desktop, GitHub Copilot CLI,
-      Cursor — any client that speaks MCP gets the full on-device functionality, and a path all the way
-      up to Azure and Microsoft 365 when you're ready.
+      Three tiny, dependency-free Model Context Protocol servers turn a folder of drop-in agents,
+      a whole local <b>brainstem</b>, and a static CDN-hosted catalog into tools your AI can call.
+      Claude Desktop, GitHub Copilot CLI, Cursor — any client that speaks MCP gets the full on-device
+      functionality, and a path all the way up to Azure and Microsoft 365 when you're ready.
     </p>
     <div class="hero-cta">
       <a class="btn primary" href="#quickstart">Get started →</a>
-      <a class="btn" href="#servers">See the two servers</a>
+      <a class="btn" href="#servers">See the servers</a>
       <a class="btn" href="https://github.com/kody-w/rapp-mcp" target="_blank" rel="noopener">github.com/kody-w/rapp-mcp ↗</a>
     </div>
 
@@ -354,6 +354,13 @@
 <pre><span class="t-cmd">python3</span> rapp_brainstem_mcp.py</pre>
         </div>
       </div>
+      <div class="install-card">
+        <span class="tag">Static CDN catalog — <b>rapp_static_mcp.py</b></span>
+        <div class="code">
+          <button class="copy" type="button">Copy</button>
+<pre><span class="t-cmd">python3</span> rapp_static_mcp.py <span class="t-str">…/api/v1/tools.json</span></pre>
+        </div>
+      </div>
     </div>
     <p class="note">Pure Python standard library. No pip install, no dependencies, no build step.</p>
   </div>
@@ -368,7 +375,8 @@
       <p>
         RAPP's philosophy is <b>"engine, not experience"</b> — infrastructure, not an app. rapp-mcp is the
         on-ramp: it speaks the Model Context Protocol so any AI client can <i>join</i> the ecosystem and
-        use it. You get two complementary servers, and you pick one or run both.
+        use it. You get three complementary servers — agents, brainstem, and a static catalog — and you
+        pick one or run any combination.
       </p>
     </div>
 
@@ -391,6 +399,18 @@
           local agent at once. It can even <b>install and start</b> the brainstem for you.
         </p>
       </div>
+      <div class="server">
+        <div class="pill-row"><span class="pill"><b>static</b></span><span class="pill">content-addressed</span><span class="pill">verify-before-exec</span></div>
+        <h3><span class="mono">rapp_static_mcp.py</span> — a CDN catalog (<span class="mono-inline">rapp-static-mcp/1.0</span>)</h3>
+        <p class="sub">
+          The <b>static profile</b> of rapp-mcp: <span class="mono-inline">rapp_mcp.py</span> generalized from a
+          local folder to a <b>manifest of URLs</b> served straight off <span class="mono-inline">raw.githubusercontent.com</span>.
+          The catalog (<span class="mono-inline">api/v1/tools.json</span>) and each agent frame
+          (<span class="mono-inline">agents/&lt;tool&gt;/&lt;sha8&gt;.py</span>) are 100% static; the client
+          <b>verifies each frame's <span class="mono-inline">sha256</span> before exec</b>. Build with
+          <span class="mono-inline">build_static_mcp.py</span> — see <a href="https://github.com/kody-w/rapp-mcp/blob/main/SPEC.md">SPEC.md §3.3</a>.
+        </p>
+      </div>
     </div>
     <p class="note">
       The bytes are the contract. The same <span class="mono-inline">*_agent.py</span> behaves identically
@@ -403,12 +423,13 @@
 <section id="servers">
   <div class="wrap">
     <div class="sec-head">
-      <span class="kicker">// The two MCP servers</span>
+      <span class="kicker">// The MCP servers</span>
       <h2>Register it in your host</h2>
       <p>
-        Both servers speak MCP over stdio. Add the snippet to your client's config, restart the client, and the
+        All three servers speak MCP over stdio. Add the snippet to your client's config, restart the client, and the
         tools appear. Use absolute paths to the <span class="mono-inline">.py</span> files (and, for
-        <span class="mono-inline">rapp_mcp.py</span>, your agents folder).
+        <span class="mono-inline">rapp_mcp.py</span>, your agents folder; for
+        <span class="mono-inline">rapp_static_mcp.py</span>, a <span class="mono-inline">tools.json</span> catalog URL).
       </p>
     </div>
 
@@ -435,6 +456,10 @@
     <span class="t-key">"rapp-brainstem"</span>: {
       <span class="t-key">"command"</span>: <span class="t-str">"python3"</span>,
       <span class="t-key">"args"</span>: [<span class="t-str">"/abs/path/rapp-mcp/rapp_brainstem_mcp.py"</span>]
+    },
+    <span class="t-key">"rapp-static-mcp"</span>: {
+      <span class="t-key">"command"</span>: <span class="t-str">"python3"</span>,
+      <span class="t-key">"args"</span>: [<span class="t-str">"/abs/path/rapp-mcp/rapp_static_mcp.py"</span>, <span class="t-str">"https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static/api/v1/tools.json"</span>]
     }
   }
 }</pre>
