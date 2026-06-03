@@ -1,0 +1,22 @@
+{
+  "schema": "rapp-static-mcp-status/1.0",
+  "generated": "1970-01-01T00:00:00Z",
+  "self": "https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static",
+  "summary": {
+    "tools": 1,
+    "in_sync": 1,
+    "update_available": 0
+  },
+  "agents": [
+    {
+      "tool": "hello",
+      "group": "examples",
+      "kind": "observe",
+      "grail_sha8": "c51bca07e6c7",
+      "current_sha8": "c51bca07e6c7",
+      "drift": false,
+      "update_available": false,
+      "version_count": 1
+    }
+  ]
+}

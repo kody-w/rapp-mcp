@@ -69,5 +69,37 @@ Tools:
 
 Env: `RAPP_BRAINSTEM_URL` (default `http://localhost:7071`).
 
+## 3. The static profile — a catalog on `raw.githubusercontent.com`
+
+MCP's `tools/call` needs compute, but rapp-mcp's thesis is **"bytes are the contract"** — so the
+**catalog and the agent bytes can be 100 % static**, served from GitHub raw with no server, and the
+only thing that runs is a tiny universal client. This is `rapp_mcp.py` generalized from a local
+folder to a manifest of URLs (`rapp-static-mcp/1.0`, built on
+[`rapp-static-api/1.0`](https://github.com/kody-w/rapp-static-apis)).
+
+```bash
+# Build a static catalog from a hand-edited manifest (run once, in CI or by hand)
+python3 build_static_mcp.py examples/manifest.json --out examples/static \
+  --self https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static
+#  -> api/v1/tools.json  (the pre-baked tools/list)
+#  -> agents/<tool>/<sha8>.py  (append-only, content-addressed, pinnable frames)
+#  -> registry.json + api/v1/status.json + api/v1/badge.json
+
+# Serve it in any MCP host — fetches tools.json + verifies each frame's sha256 before exec
+python3 rapp_static_mcp.py https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static/api/v1/tools.json
+```
+
+```json
+{ "mcpServers": { "rapp-static-mcp": {
+  "command": "python3",
+  "args": ["/abs/path/rapp_static_mcp.py",
+           "https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static/api/v1/tools.json"] } } }
+```
+
+The catalog is free, CDN-cached, CORS-open, forkable, and durable: **pin a `sha8` and that exact
+agent runs forever**, even if `main` breaks or the source vanishes — and the client **refuses to run
+any frame whose hash doesn't match the pin**. A worked example ships under `examples/static/`.
+See [`SPEC.md` §3.3](SPEC.md).
+
 ## License
 MIT

@@ -1,0 +1,44 @@
+{
+  "schema": "rapp-static-mcp-registry/1.0",
+  "name": "rapp-static-mcp-examples",
+  "generated": "1970-01-01T00:00:00Z",
+  "self": "https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static",
+  "policy": {
+    "observe": "Drift is surfaced, never coerced — a pinned frame works forever.",
+    "enforce": ""
+  },
+  "release": {
+    "version": "1.0.0",
+    "note": "Example static MCP catalog — the canonical hello agent, served as a pinnable, content-addressed MCP tool."
+  },
+  "summary": {
+    "tools": 1,
+    "versions": 1
+  },
+  "agents": [
+    {
+      "tool": "hello",
+      "group": "examples",
+      "kind": "observe",
+      "note": "The canonical hello agent, served as a static MCP tool. Production manifests point grail.url at a raw.githubusercontent.com URL; this example uses a local relative path so it builds offline.",
+      "grail_label": "rapp-mcp",
+      "grail_url": "hello_agent.py",
+      "grail_sha8": "c51bca07e6c7",
+      "current_sha8": "c51bca07e6c7",
+      "current_frame_url": "https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static/agents/hello/c51bca07e6c7.py",
+      "pinned": false,
+      "version_count": 1,
+      "versions": [
+        {
+          "sha256": "c51bca07e6c75e7aef7a62505c2d3d64cf0339affef166d0982463816b6c3204",
+          "sha8": "c51bca07e6c7",
+          "bytes": 762,
+          "path": "agents/hello/c51bca07e6c7.py",
+          "url": "https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static/agents/hello/c51bca07e6c7.py",
+          "first_captured": "1970-01-01T00:00:00Z",
+          "class": "HelloAgent"
+        }
+      ]
+    }
+  ]
+}

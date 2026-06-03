@@ -1,0 +1,30 @@
+{
+  "schema": "rapp-static-mcp-manifest/1.0",
+  "name": "rapp-static-mcp-examples",
+  "server": {
+    "name": "rapp-static-mcp",
+    "version": "1.0.0",
+    "protocol": "2024-11-05"
+  },
+  "self": "https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static",
+  "release": {
+    "version": "1.0.0",
+    "note": "Example static MCP catalog — the canonical hello agent, served as a pinnable, content-addressed MCP tool."
+  },
+  "policy": {
+    "observe": "Drift is surfaced, never coerced — a pinned frame works forever.",
+    "enforce": ""
+  },
+  "agents": [
+    {
+      "group": "examples",
+      "kind": "observe",
+      "note": "The canonical hello agent, served as a static MCP tool. Production manifests point grail.url at a raw.githubusercontent.com URL; this example uses a local relative path so it builds offline.",
+      "pin": null,
+      "grail": {
+        "label": "rapp-mcp",
+        "url": "hello_agent.py"
+      }
+    }
+  ]
+}
