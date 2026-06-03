@@ -84,11 +84,12 @@ automated path up the three tiers — invoked only when the user chooses.
 
 ---
 
-## 3. The two MCP servers
+## 3. The MCP servers
 
-Both servers speak MCP over **stdio** using JSON-RPC, protocol version `2024-11-05`. Both are pure
+Every server speaks MCP over **stdio** using JSON-RPC, protocol version `2024-11-05`. All are pure
 Python standard library — no install, no dependencies. Logs go to **stderr**; the **stdout** stream
-is reserved for the MCP protocol.
+is reserved for the MCP protocol. Two serve agents/brainstem from the local machine (§3.1, §3.2); a
+third **static profile** (§3.3) serves a catalog hosted entirely on `raw.githubusercontent.com`.
 
 Public source: **github.com/kody-w/rapp-mcp**.
 
@@ -255,6 +256,82 @@ Installs (if needed) and starts the local Brainstem, then waits until it reports
 
 You may register **both** servers at once — agents as fine-grained tools *and* the Brainstem as the
 do-everything tool — by placing both entries under the same `mcpServers` (or `servers`) object.
+
+---
+
+### 3.3 The static profile — a catalog on `raw.githubusercontent.com`
+
+`rapp-static-mcp/1.0` is the **static profile** of rapp-mcp, built on the
+[`rapp-static-api/1.0`](https://github.com/kody-w/rapp-static-apis) pattern. MCP's `tools/call`
+needs *compute*, but rapp-mcp's thesis is **"bytes are the contract"** — so the **catalog and the
+agent bytes are 100 % static and global**, and the only thing that runs is a tiny universal client.
+It is the direct generalization of `rapp_mcp.py` from a *local agents dir* to a *manifest of URLs*.
+
+Two files:
+
+- **`build_static_mcp.py`** — the **build step** (run once, in CI or by hand). A hand-edited
+  `manifest.json` → a generated, CDN-servable tree:
+
+  | Path | What it is |
+  |------|-----------|
+  | `api/v1/tools.json` | the **pre-baked MCP `tools/list` payload** — served with zero compute. Each tool carries a leading-underscore `_frame` x-extension (`url`, `sha256`, `sha8`, `class`, `bytes`, `pinned`) that MCP hosts ignore and the static client reads. |
+  | `agents/<tool>/<sha8>.py` | **append-only, content-addressed agent frames.** `sha8` = first 12 hex of `sha256(raw bytes)`. A frame is **never mutated or deleted** — every version is an immutable, pinnable fallback. |
+  | `registry.json` | the full index — every version of every tool, each pinnable forever. |
+  | `api/v1/status.json`, `api/v1/badge.json` | a drift verdict shaped so **rapp-god** can observe this repo as just another part. |
+
+  The build is **idempotent** (same input bytes → byte-identical output; `--check` fails CI if stale)
+  and **deterministic** (the same agent bytes always hash to the same `sha8` on any host).
+
+- **`rapp_static_mcp.py`** — the **universal client**, a pure-stdlib stdio MCP server whose wire shape
+  is byte-identical to `rapp_mcp.py` (so any host already wired for rapp-mcp works unchanged):
+
+  ```json
+  { "mcpServers": { "rapp-static-mcp": {
+    "command": "python3",
+    "args": ["/abs/path/rapp_static_mcp.py",
+             "https://raw.githubusercontent.com/<owner>/<repo>/main/api/v1/tools.json"] } } }
+  ```
+
+  It accepts a `tools.json` URL, a base URL, a `manifest.json`, or a **local path**.
+  `initialize`/`tools/list` serve the pre-baked catalog (cached locally for offline use, `_frame`
+  stripped from what the host sees). On **`tools/call`** it fetches the tool's pinned frame,
+  **verifies `sha256` before executing it** (a frame whose bytes don't match the baked hash —
+  *or that carries no valid 64-hex `sha256` at all* — is **never run**: the integrity gate fails
+  closed), execs locally with the same `BasicAgent` + `utils.azure_file_storage` shims as
+  `rapp_mcp.py`, and returns the identical `{ "content": [ { "type": "text", "text": … } ] }` shape.
+
+  Environment:
+
+  | Var | Effect |
+  |-----|--------|
+  | `RAPP_STATIC_MCP_URL` | overrides `argv[1]` (the catalog source) |
+  | `RAPP_STATIC_MCP_CACHE` | content-addressed cache dir (default `~/.rapp_static_mcp`) — pinned, already-fetched frames serve fully offline from here |
+  | `RAPP_STATIC_MCP_DATA` | agent local-storage dir for `utils.azure_file_storage` (default `~/.rapp_static_mcp_data`) |
+
+- **`manifest.json`** (the only hand-edited file) declares the catalog:
+
+  ```json
+  {
+    "schema": "rapp-static-mcp-manifest/1.0",
+    "name": "rapp-static-mcp-examples",
+    "server": { "name": "rapp-static-mcp", "version": "1.0.0", "protocol": "2024-11-05" },
+    "self": "https://raw.githubusercontent.com/<owner>/<repo>/main/<base>",
+    "agents": [
+      { "group": "examples", "kind": "observe", "pin": null,
+        "grail": { "label": "rapp-mcp", "url": "https://raw.githubusercontent.com/.../hello_agent.py" } }
+    ]
+  }
+  ```
+
+  Optional per-agent keys: `tool` (override the MCP tool name), `note`, `pin` (a `sha8` to **freeze**
+  the tool to forever — immune to any future change on `main`).
+
+**Why it matters:** the catalog and code are free, CDN-cached, CORS-open, forkable, and durable.
+Pinning a `sha8` is an eternal, host-independent fallback that keeps working even if `main` breaks,
+the source repo vanishes, or a bad update ships — the frame is already on GitHub's CDN, and the
+client refuses to run anything whose hash doesn't match the pin. A worked example ships under
+`examples/static/` (built from `examples/manifest.json`); its frame `url` is the canonical raw
+path, so a live `tools/call` against the committed example resolves once that path is published.
 
 ---
 

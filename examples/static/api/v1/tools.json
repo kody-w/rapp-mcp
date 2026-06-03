@@ -1,0 +1,36 @@
+{
+  "schema": "rapp-static-mcp-tools/1.0",
+  "generated": "1970-01-01T00:00:00Z",
+  "self": "https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static",
+  "server": {
+    "name": "rapp-static-mcp",
+    "version": "1.0.0",
+    "protocol": "2024-11-05"
+  },
+  "tools": [
+    {
+      "name": "hello",
+      "description": "Say hello to someone.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Who to greet."
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "_frame": {
+        "url": "https://raw.githubusercontent.com/kody-w/rapp-mcp/main/examples/static/agents/hello/c51bca07e6c7.py",
+        "sha256": "c51bca07e6c75e7aef7a62505c2d3d64cf0339affef166d0982463816b6c3204",
+        "sha8": "c51bca07e6c7",
+        "class": "HelloAgent",
+        "bytes": 762,
+        "pinned": false
+      }
+    }
+  ]
+}
