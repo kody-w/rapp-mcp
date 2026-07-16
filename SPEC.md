@@ -8,7 +8,7 @@
 
 ## 1. Manifesto — AIs joining the RAPP ecosystem
 
-RAPP (Rapid Agent Prototyping Platform) is an **engine, not an experience**. It runs as three
+RAPP (Rapid Agent Prototype Platform) is an **engine, not an experience**. It runs as three
 self-contained tiers — Brainstem (local), Spinal Cord (Azure), Nervous System (Microsoft 365) —
 and the user advances from one to the next *only when they choose to*.
 
