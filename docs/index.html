@@ -385,9 +385,10 @@
         <div class="pill-row"><span class="pill"><b>stateless</b></span><span class="pill">hotload</span><span class="pill">stdlib only</span></div>
         <h3><span class="mono">rapp_mcp.py</span> — agents as tools</h3>
         <p class="sub">
-          Point it at a folder of <span class="mono-inline">*_agent.py</span> files. Each agent becomes its
-          own MCP tool, with the agent's own JSON-Schema as the tool's input schema. Drop a new file in and
-          it <b>hotloads</b> — the folder is re-scanned on every call, so there's nothing to restart.
+          Point it at a folder of <span class="mono-inline">*_agent.py</span> files. Each agent at the top of
+          the folder becomes its own MCP tool, with the agent's own JSON-Schema as the tool's input schema.
+          Drop a new file in at the top and it <b>hotloads</b> — the folder is re-scanned on every call, so
+          there's nothing to restart.
         </p>
       </div>
       <div class="server alt">
