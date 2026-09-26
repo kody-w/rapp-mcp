@@ -89,7 +89,10 @@ class SetupVscodeMcpAgent(BasicAgent):
         ws = os.path.abspath(os.path.expanduser(kwargs.get("workspace_dir") or os.getcwd()))
         mode = kwargs.get("mode") or "brainstem"
         url = (kwargs.get("brainstem_url") or os.environ.get("RAPP_BRAINSTEM_URL") or "http://localhost:7071").rstrip("/")
-        agents_dir = os.environ.get("AGENTS_PATH") or os.path.dirname(os.path.abspath(__file__))
+        # Only top-level agents load, so the folder this agent was loaded from is the live agents
+        # folder. AGENTS_PATH can be relative (the stock .env says ./agents), and an MCP host starts
+        # the server from a working directory of its own choosing, so write an absolute path.
+        agents_dir = os.path.dirname(os.path.abspath(__file__))
         cfg_path = self._vscode_path(ws)
         health = self._health(url)
 
@@ -136,8 +139,7 @@ class SetupVscodeMcpAgent(BasicAgent):
         added = ["rapp-brainstem (the whole brainstem /chat loop as one 'ask the brainstem' tool)"]
         if mode == "both":
             cfg["servers"]["rapp-agents"] = {
-                "type": "stdio", "command": "python3", "args": [agents_bridge],
-                "env": {"RAPP_AGENTS_DIR": agents_dir}
+                "type": "stdio", "command": "python3", "args": [agents_bridge, agents_dir]
             }
             added.append("rapp-agents (each agents/*_agent.py as its own tool)")
         json.dump(cfg, open(cfg_path, "w"), indent=2)

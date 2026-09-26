@@ -103,5 +103,10 @@ agent runs forever**, even if `main` breaks or the source vanishes — and the c
 any frame whose hash doesn't match the pin**. A worked example ships under `examples/static/`.
 See [`SPEC.md` §3.3](SPEC.md).
 
+## Spec versions
+
+[`SPEC.md`](SPEC.md) is `rapp-mcp-spec/2.0`. [`SPEC-1.0.md`](SPEC-1.0.md) is the superseded
+`rapp-mcp-spec/1.0`, kept byte-identical and never edited; `SPEC.md` §8.1 lists what changed.
+
 ## License
 MIT

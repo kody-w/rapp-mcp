@@ -6,8 +6,10 @@
 Spawns each MCP server over stdio, does the protocol handshake, and checks that the
 expected tools are served and a tool call works.
 """
+import importlib.util
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -42,9 +44,9 @@ HANDSHAKE = [
 ]
 
 
-def mcp(cmd, requests, timeout=30):
+def mcp(cmd, requests, timeout=30, cwd=None):
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL, text=True, bufsize=1)
+                            stderr=subprocess.DEVNULL, text=True, bufsize=1, cwd=cwd)
     want = {r["id"] for r in requests if "id" in r}
     out = {}
     try:
@@ -113,6 +115,60 @@ def check_top_level_only(fails):
     if version != "2.0.0":
         fails.append(f"rapp_mcp: expected serverInfo.version 2.0.0 (rapp-mcp-spec/2.0), got {version!r}")
 
+def check_vscode_example(fails):
+    """examples/setup_vscode_mcp_agent.py (mode="both") registers rapp_mcp.py so that it serves
+    the Brainstem's live agents from any working directory the MCP host starts it in.
+
+    With no folder argument rapp_mcp.py serves its working directory, and a relative folder is
+    resolved against it, so the example must write the absolute path of the agents folder. The
+    stock .env sets AGENTS_PATH=./agents, so the check sets that too, loads the example from a
+    Brainstem's agents/ folder as a Brainstem would, writes the config into another project, and
+    starts the server from that project's folder.
+    """
+    with tempfile.TemporaryDirectory() as root:
+        agents_dir = os.path.join(root, "rapp_brainstem", "agents")
+        project = os.path.join(root, "project")
+        os.makedirs(agents_dir)
+        os.makedirs(project)
+        with open(os.path.join(agents_dir, "live_agent.py"), "w", encoding="utf-8") as f:
+            f.write(PROBE_AGENT.format(name="live"))
+        example_path = os.path.join(agents_dir, "setup_vscode_mcp_agent.py")
+        shutil.copyfile(os.path.join(REPO, "examples", "setup_vscode_mcp_agent.py"), example_path)
+        spec = importlib.util.spec_from_file_location("setup_vscode_mcp_example", example_path)
+        example = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(example)
+        example.ACCESSORY = REPO  # use this checkout instead of cloning rapp-mcp
+        agent = example.SetupVscodeMcpAgent()
+        agent._ensure_repo = lambda: (True, "rapp-mcp present (test)")
+        agent._health = lambda url: None
+        saved = {k: os.environ.get(k) for k in ("AGENTS_PATH", "RAPP_MCP_DATA")}
+        os.environ["AGENTS_PATH"] = "./agents"
+        os.environ["RAPP_MCP_DATA"] = os.path.join(root, "data")
+        try:
+            agent.perform(action="install", mode="both", workspace_dir=project)
+            with open(os.path.join(project, ".vscode", "mcp.json"), encoding="utf-8") as f:
+                args = json.load(f)["servers"]["rapp-agents"].get("args", [])
+            folder = args[1] if len(args) > 1 else None
+            if not (folder and os.path.isabs(folder) and os.path.samefile(folder, agents_dir)):
+                fails.append(f"examples/setup_vscode_mcp_agent.py: the rapp-agents entry must pass the "
+                             f"absolute agents folder to rapp_mcp.py, got args {args!r}")
+                return
+            r = mcp([PY] + args,
+                    HANDSHAKE + [{"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}],
+                    cwd=project)
+        finally:
+            for key, value in saved.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+    tools = {t.get("name") for t in (r.get(2) or {}).get("tools", [])}
+    expected = {"live", "SetupVSCodeMCP"}
+    if tools != expected:
+        fails.append(f"examples/setup_vscode_mcp_agent.py: its rapp-agents entry should serve "
+                     f"{sorted(expected)} from the Brainstem's agents folder, got {sorted(tools)}")
+
+
 def main():
     fails = []
 
@@ -132,6 +188,9 @@ def main():
     # rapp_mcp.py serves only top-level agents (a nested folder is parked)
     check_top_level_only(fails)
 
+    # the VS Code setup example points rapp_mcp.py at the Brainstem's agents folder
+    check_vscode_example(fails)
+
     # rapp_brainstem_mcp.py serves its three tools
     r = mcp([PY, os.path.join(REPO, "rapp_brainstem_mcp.py")],
             HANDSHAKE + [{"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}])
@@ -145,8 +204,8 @@ def main():
         for f in fails:
             print("  -", f)
         sys.exit(1)
-    print("OK — rapp_mcp serves + calls the example agent and serves only top-level agents; "
-          "rapp_brainstem serves its 3 tools.")
+    print("OK — rapp_mcp serves + calls the example agent and serves only top-level agents; the "
+          "VS Code example points it at the agents folder; rapp_brainstem serves its 3 tools.")
 
 
 if __name__ == "__main__":
