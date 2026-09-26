@@ -107,6 +107,9 @@ See [`SPEC.md` §3.3](SPEC.md).
 
 [`SPEC.md`](SPEC.md) is `rapp-mcp-spec/2.0`. [`SPEC-1.0.md`](SPEC-1.0.md) is the superseded
 `rapp-mcp-spec/1.0`, kept byte-identical and never edited; `SPEC.md` §8.1 lists what changed.
+Upgrading from 1.0: an agent in a subfolder is no longer served (move it to the top of the
+folder), and a `rapp-agents` entry written by the old VS Code example needs the absolute agents
+folder as its second `args` item.
 
 ## License
 MIT

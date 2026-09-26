@@ -149,7 +149,8 @@ def check_vscode_example(fails):
             with open(os.path.join(project, ".vscode", "mcp.json"), encoding="utf-8") as f:
                 args = json.load(f)["servers"]["rapp-agents"].get("args", [])
             folder = args[1] if len(args) > 1 else None
-            if not (folder and os.path.isabs(folder) and os.path.samefile(folder, agents_dir)):
+            if not (folder and os.path.isabs(folder) and os.path.isdir(folder)
+                    and os.path.samefile(folder, agents_dir)):
                 fails.append(f"examples/setup_vscode_mcp_agent.py: the rapp-agents entry must pass the "
                              f"absolute agents folder to rapp_mcp.py, got args {args!r}")
                 return

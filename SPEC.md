@@ -575,6 +575,13 @@ This document is **`rapp-mcp-spec/2.0`**.
   every top-level `*_agent.py` except `basic_agent.py` is served, and nothing in a subfolder is.
   An agent that 1.0 served from a subfolder is no longer a tool until it is moved to the top of
   the folder. `rapp_mcp.py` reports `serverInfo.version` `2.0.0`.
+- **Configs written by the 1.0-era VS Code example.** Before 2.0,
+  `examples/setup_vscode_mcp_agent.py` (mode "both") registered `rapp_mcp.py` with no folder
+  argument, so the server served the host's working directory, by default the Brainstem's own
+  folder; 1.0 found the agents in its `agents/` subfolder only because it scanned recursively.
+  Under 2.0 such a `rapp-agents` entry serves nothing. Repair it by adding the absolute path of
+  the Brainstem's agents folder as the entry's second `args` item, or by copying the current
+  example into that folder and running its `install` with mode "both" again.
 - Nothing else changed: `rapp_brainstem_mcp.py` (§3.2) and the static profile (§3.3) behave as
   in 1.0, and `rapp_brainstem_mcp.py` still reports `serverInfo.version` `1.0.0`.
 - The `rapp-mcp-spec/1.0` text ships alongside this one, byte-identical, in
