@@ -21,9 +21,9 @@ All are pure Python standard library. Pick one or run any combination.
 ```bash
 python3 rapp_mcp.py /path/to/agents
 ```
-Each `*_agent.py` in the folder becomes an MCP tool. Drop a new one in and it **hotloads**
-— re-scanned on every call, nothing to restart. The bytes are the contract: identical on
-every machine.
+Each `*_agent.py` at the top of the folder becomes an MCP tool; a file in any subfolder is
+parked and not served. Drop a new one in and it **hotloads** — re-scanned on every call,
+nothing to restart. The bytes are the contract: identical on every machine.
 
 ```json
 { "mcpServers": { "rapp-mcp": {
@@ -102,6 +102,15 @@ The catalog is free, CDN-cached, CORS-open, forkable, and durable: **pin a `sha8
 agent runs forever**, even if `main` breaks or the source vanishes — and the client **refuses to run
 any frame whose hash doesn't match the pin**. A worked example ships under `examples/static/`.
 See [`SPEC.md` §3.3](SPEC.md).
+
+## Spec versions
+
+[`SPEC.md`](SPEC.md) is `rapp-mcp-spec/2.0`. [`SPEC-1.0.md`](SPEC-1.0.md) is the superseded
+`rapp-mcp-spec/1.0`, kept byte-identical and never edited; `SPEC.md` §8.1 lists what changed.
+Upgrading from 1.0: an agent in a subfolder is no longer served (move it to the top of the
+folder), and a `rapp-agents` entry written by the old VS Code example needs the absolute agents
+folder as its second `args` item (or copy the current example into that folder and run its
+`install` with mode "both" again).
 
 ## License
 MIT
