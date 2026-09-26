@@ -1,5 +1,9 @@
 # rapp-mcp
 
+<!-- rapp1:network-header:start -->
+[![RAPP/1](https://kody-w.github.io/rapp-hive-public/portfolio/badges/rapp-mcp.svg)](https://github.com/kody-w/rapp-hive-public/blob/main/portfolio/repos/rapp-mcp.md) · **New to RAPP?** [Start here: get your Brainstem →](https://github.com/kody-w/rapp-installer#start-here)
+<!-- rapp1:network-header:end -->
+
 **[📖 Docs & live site →](https://kody-w.github.io/rapp-mcp)**  ·  **[Spec → `SPEC.md`](SPEC.md)**
 
 Bring **RAPP** onto any MCP host (Claude Desktop, GitHub Copilot CLI, Cursor, …).
