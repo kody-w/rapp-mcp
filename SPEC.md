@@ -535,7 +535,8 @@ change to the agents themselves.
   no tenant ids, client/app ids, subscription ids, API keys, tokens, or personal information. Local
   state (e.g. `~/.rapp_mcp_data`, `~/.brainstem`) stays on disk and out of the repo.
 - **MCP host permissions.** The calling AI can only invoke the tools the host has registered and the
-  user has approved. `rapp_mcp.py` exposes exactly the agents in the pointed-at folder — no more.
+  user has approved. `rapp_mcp.py` exposes exactly the top-level agents in the pointed-at folder
+  (§3.1) — no more.
   `rapp_brainstem_mcp.py` exposes exactly three tools (`brainstem`, `brainstem_status`,
   `brainstem_bootstrap`); the user controls whether the bridge is registered at all.
 - **Arbitrary-code awareness.** A `*_agent.py` is Python and runs with the user's privileges. Treat
@@ -570,8 +571,10 @@ This document is **`rapp-mcp-spec/2.0`**.
   `experimental_notes_agent.py`), and it served an agent kept in any other subfolder. In 2.0,
   every top-level `*_agent.py` except `basic_agent.py` is served, and nothing in a subfolder is.
   An agent that 1.0 served from a subfolder is no longer a tool until it is moved to the top of
-  the folder. The server reports `serverInfo.version` `2.0.0`.
-- Nothing else changed. The `rapp-mcp-spec/1.0` text stays readable at
+  the folder. `rapp_mcp.py` reports `serverInfo.version` `2.0.0`.
+- Nothing else changed: `rapp_brainstem_mcp.py` (§3.2) and the static profile (§3.3) behave as
+  in 1.0, and `rapp_brainstem_mcp.py` still reports `serverInfo.version` `1.0.0`. The
+  `rapp-mcp-spec/1.0` text stays readable at
   [`651ce82`](https://github.com/kody-w/rapp-mcp/blob/651ce8250b9569e890c03f6743f45a16675419c9/SPEC.md).
 
 ---

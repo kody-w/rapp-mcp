@@ -34,7 +34,7 @@ import urllib.error
 import urllib.request
 
 SERVER_NAME = "rapp-brainstem"
-SERVER_VERSION = "1.0.0"  # tracks the stable rapp-mcp-spec/1.0
+SERVER_VERSION = "1.0.0"  # rapp-mcp-spec/2.0 left this server unchanged (SPEC.md §8.1)
 PROTOCOL = "2024-11-05"
 
 BRAINSTEM_URL = os.environ.get("RAPP_BRAINSTEM_URL", "http://localhost:7071").rstrip("/")
