@@ -5,10 +5,11 @@ A single, dependency-free MCP (Model Context Protocol) server that exposes a fol
 `agent.py` files to ANY MCP client (Claude Desktop, GitHub Copilot CLI, Cursor, and
 anything else that speaks MCP).
 
-Point it at a folder of `*_agent.py` files. Each agent becomes an MCP tool. Drop a new
-`*_agent.py` into the folder and it hotloads — agents are re-scanned on every tools/list
-and tools/call, so there's nothing to restart. The bytes are the contract: the same file
-behaves identically on every machine.
+Point it at a folder of `*_agent.py` files. Each `*_agent.py` at the top of the folder
+becomes an MCP tool; a file in any subfolder is parked and not served. Drop a new
+`*_agent.py` at the top of the folder and it hotloads — agents are re-scanned on every
+tools/list and tools/call, so there's nothing to restart. The bytes are the contract: the
+same file behaves identically on every machine.
 
 USAGE
     python3 rapp_mcp.py /path/to/agents
@@ -36,7 +37,7 @@ import traceback
 import types
 
 SERVER_NAME = "rapp-mcp"
-SERVER_VERSION = "1.0.0"  # tracks the stable rapp-mcp-spec/1.0
+SERVER_VERSION = "2.0.0"  # tracks the stable rapp-mcp-spec/2.0
 PROTOCOL = "2024-11-05"
 
 AGENTS_DIR = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.getcwd()
@@ -104,9 +105,10 @@ def load_agents():
     if AGENTS_DIR not in sys.path:
         sys.path.insert(0, AGENTS_DIR)
     agents = {}
-    for fp in sorted(glob.glob(os.path.join(AGENTS_DIR, "**", "*_agent.py"), recursive=True)):
+    # Only top-level *_agent.py files are live; every subfolder is organization (parked).
+    for fp in sorted(glob.glob(os.path.join(AGENTS_DIR, "*_agent.py"))):
         base = os.path.basename(fp)
-        if base in ("basic_agent.py",) or "/experimental" in fp or "/disabled" in fp:
+        if base == "basic_agent.py":
             continue
         try:
             modname = "agentpy_" + base[:-3] + "_" + str(abs(hash(fp)))

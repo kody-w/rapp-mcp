@@ -1,8 +1,9 @@
 # RAPP Ecosystem Access Specification (rapp-mcp)
 
-> **Spec version:** `rapp-mcp-spec/1.0`
+> **Spec version:** `rapp-mcp-spec/2.0`
 > **Status:** stable · additive-only
 > **Scope:** how any AI / MCP host joins the RAPP ecosystem through the Model Context Protocol.
+> **Supersedes:** `rapp-mcp-spec/1.0`. The one breaking change is in §3.1; see §8.
 
 ---
 
@@ -105,12 +106,16 @@ schema come straight from the agent's `metadata`.
 python3 rapp_mcp.py /path/to/agents
 ```
 
-If no path is given, the current working directory is used. The agents folder is scanned
-**recursively**; `basic_agent.py` and any path segment named `experimental` or `disabled` is
-skipped.
+If no path is given, the current working directory is used. Only the `*_agent.py` files at the
+**top level** of the agents folder are served, and `basic_agent.py` is skipped. Every subfolder
+is organization only: a file in a subfolder is parked and is not served, whatever the folder's
+name. To serve a parked agent, move it to the top of the folder; to stop serving one, move it
+into any subfolder. This is the same rule as the RAPP Brainstem's (RAPP proposal 0001,
+[kody-w/RAPP#124](https://github.com/kody-w/RAPP/pull/124)).
 
 **Hotload.** Agents are re-scanned on **every** `tools/list` and `tools/call`. Drop a new
-`*_agent.py` into the folder and it appears as a tool with no restart. *The bytes are the contract.*
+`*_agent.py` at the top of the folder and it appears as a tool with no restart. *The bytes are
+the contract.*
 
 **Tools exposed.** One MCP tool **per agent**. For an agent with `self.name = "hello"`:
 
@@ -545,17 +550,29 @@ change to the agents themselves.
 
 ## 8. Versioning
 
-This document is **`rapp-mcp-spec/1.0`**.
+This document is **`rapp-mcp-spec/2.0`**.
 
-- **Additive, never breaking.** Within major version `1.x`, changes only *add* — new optional tool
+- **Additive, never breaking.** Within major version `2.x`, changes only *add* — new optional tool
   params, new optional response fields, new tiers/promotion agents, new client-config variants.
   Existing tool names, required params, and response fields do not change meaning or disappear.
-- **Compatibility contract.** A client written against `1.0` keeps working against any `1.x`. Read
+- **Compatibility contract.** A client written against `2.0` keeps working against any `2.x`. Read
   permissively (ignore unknown fields); write conservatively (emit only what is specified).
 - **Wire protocol.** The MCP servers implement MCP protocol `2024-11-05` over stdio. Protocol-level
   upgrades, if any, will be negotiated through MCP's own `initialize` handshake and noted here.
 - **Breaking changes** — should they ever be unavoidable — would ship as a new major
-  (`rapp-mcp-spec/2.0`) alongside, never silently in place.
+  (`rapp-mcp-spec/3.0`) alongside, never silently in place.
+
+### 8.1 Changes from `rapp-mcp-spec/1.0` (2026-09-26)
+
+- **One breaking change: `rapp_mcp.py` serves only top-level agents.** 1.0 scanned the agents
+  folder recursively and skipped any path containing `/experimental` or `/disabled`. That check
+  also skipped a top-level file whose name merely starts with those words (for example
+  `experimental_notes_agent.py`), and it served an agent kept in any other subfolder. In 2.0,
+  every top-level `*_agent.py` except `basic_agent.py` is served, and nothing in a subfolder is.
+  An agent that 1.0 served from a subfolder is no longer a tool until it is moved to the top of
+  the folder. The server reports `serverInfo.version` `2.0.0`.
+- Nothing else changed. The `rapp-mcp-spec/1.0` text stays readable at
+  [`651ce82`](https://github.com/kody-w/rapp-mcp/blob/651ce8250b9569e890c03f6743f45a16675419c9/SPEC.md).
 
 ---
 

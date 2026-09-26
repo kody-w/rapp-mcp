@@ -21,9 +21,9 @@ All are pure Python standard library. Pick one or run any combination.
 ```bash
 python3 rapp_mcp.py /path/to/agents
 ```
-Each `*_agent.py` in the folder becomes an MCP tool. Drop a new one in and it **hotloads**
-— re-scanned on every call, nothing to restart. The bytes are the contract: identical on
-every machine.
+Each `*_agent.py` at the top of the folder becomes an MCP tool; a file in any subfolder is
+parked and not served. Drop a new one in and it **hotloads** — re-scanned on every call,
+nothing to restart. The bytes are the contract: identical on every machine.
 
 ```json
 { "mcpServers": { "rapp-mcp": {
